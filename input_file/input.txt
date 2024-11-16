@@ -1,0 +1,26 @@
+I don't want to study
+I just don't want to do it
+I don't like database
+Why do we live
+Such has been the patient
+MapReduce framework.
+The idea is based on the understanding that most data-intensive programs used by Google are very similar in terms of their basic concept. 
+On the basis of these common features, Google developed an abstraction 
+layer that splits the data flow into two main phases the map phase and the reduce phase [1]. In a style similar to functional programming, 
+computations can take place in parallel on multiple computers in the map phase. The same thing also applies to the reduce phase, 
+so that MapReduce applications can be massively parallelized on a computer cluster.
+Automatic parallelization of large-scale computations does not explain the 
+popularity of MapReduce in companies such as Adobe, eBay, Twitter, and others. Of course, the Apache 
+Hadoop open source implementation of MapReduce does help, but what is more likely to be important is that Hadoop 
+can be installed on standard hardware and possesses excellent scaling characteristics, 
+making it possible to run a cost efficient MapReduce cluster, which can be dynamically extended by purchasing more computers. 
+An equally attractive option is not having to operate your own MapReduce cluster but accessing cloud capacity instead. Amazon, for example,
+offers Amazon Elastic MapReduce clusters that adapt dynamically to customer requirements.
+The pillar of a MapReduce system is a distributed file system whose basic functionality is easily 
+explained Large files are split into blocks of equal size, which are distributed across the cluster for storage. 
+Because you always need to consider the failure of the computer in a larger cluster, each block is stored multiple times 
+(typically three times) on different computers.
+In the implementation of MapReduce, the user applies an alternating succession
+of map and reduce functions to the data. Parallel execution of these functions, 
+and the difficulties that occur in the process, are handled automatically by the framework.
+An iteration comprises three phases map, shuffle, and reduce (Figure 1).
