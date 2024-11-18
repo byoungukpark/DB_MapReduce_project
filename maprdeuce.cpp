@@ -12,8 +12,8 @@
 #include <iomanip>
 #include <cctype>
 #include <io.h>
-#include <time.h> //½Ã°£
-#include <thread> //¾Æ·¡ÂÊÀº ½º·¡µå »ç¿ë
+#include <time.h> //ì‹œê°„
+#include <thread> //ì•„ë˜ìª½ì€ ìŠ¤ë˜ë“œ ì‚¬ìš©
 #include <functional>
 #include <condition_variable>
 #include <mutex>
@@ -36,13 +36,13 @@ void waitForEnter();
 void wordCount();
 void printWordCounts();
 
-int currentMenu = 1; // ÇöÀç ¼±ÅÃµÈ ¸Ş´º
-//input ÆÄÀÏ, map_file Æú´õ, result Æú´õ ¸¸µé°í °æ·Î ¼öÁ¤ÇÏ±â
-string path_in = "./input_file/input.txt"; //¿ø½ÃÆÄÀÏ °æ·Î
-string path_map_out = "./map_file/"; //map, solt ÆÄÀÏ ³ÖÀ» °æ·Î
-string path_result = "./result_file/result.txt"; //ÃÖÁ¾ ÆÄÀÏ ³ÖÀ» °æ·Î
+int currentMenu = 1; // í˜„ì¬ ì„ íƒëœ ë©”ë‰´
+//input íŒŒì¼, map_file í´ë”, result í´ë” ë§Œë“¤ê³  ê²½ë¡œ ìˆ˜ì •í•˜ê¸°
+string path_in = "./input_file/input.txt"; //ì›ì‹œíŒŒì¼ ê²½ë¡œ
+string path_map_out = "./map_file/"; //map, solt íŒŒì¼ ë„£ì„ ê²½ë¡œ
+string path_result = "./result_file/result.txt"; //ìµœì¢… íŒŒì¼ ë„£ì„ ê²½ë¡œ
 
-int block_size = 100000; //ÆÄÀÏ³ª´©´Â ±âÁØ (ÇÑ ÆÄÀÏÀÇ ÃÖ´ë ÁÙ ¼ö)
+int block_size = 100000; //íŒŒì¼ë‚˜ëˆ„ëŠ” ê¸°ì¤€ (í•œ íŒŒì¼ì˜ ìµœëŒ€ ì¤„ ìˆ˜)
 int word_size = block_size * 10;
 int thread_size = 2;
 
@@ -53,31 +53,31 @@ time_t start, finish;
 
 typedef pair<string, int> KeyValuePair;
 
-//--------------------------------  ½º·¹µå Ç®  -------------------------------------------------
+//--------------------------------  ìŠ¤ë ˆë“œ í’€  -------------------------------------------------
 namespace ThreadPool {
     class ThreadPool {
     public:
         ThreadPool(size_t num_threads);
         ~ThreadPool();
 
-        // job À» Ãß°¡ÇÑ´Ù.
+        // job ì„ ì¶”ê°€í•œë‹¤.
         void EnqueueJob(std::function<void()> job);
 
     private:
-        // ÃÑ Worker ¾²·¹µåÀÇ °³¼ö.
+        // ì´ Worker ì“°ë ˆë“œì˜ ê°œìˆ˜.
         size_t num_threads_;
-        // Worker ¾²·¹µå¸¦ º¸°üÇÏ´Â º¤ÅÍ.
+        // Worker ì“°ë ˆë“œë¥¼ ë³´ê´€í•˜ëŠ” ë²¡í„°.
         std::vector<std::thread> worker_threads_;
-        // ÇÒÀÏµéÀ» º¸°üÇÏ´Â job Å¥.
+        // í• ì¼ë“¤ì„ ë³´ê´€í•˜ëŠ” job í.
         std::queue<std::function<void()>> jobs_;
-        // À§ÀÇ job Å¥¸¦ À§ÇÑ cv ¿Í m.
+        // ìœ„ì˜ job íë¥¼ ìœ„í•œ cv ì™€ m.
         std::condition_variable cv_job_q_;
         std::mutex m_job_q_;
 
-        // ¸ğµç ¾²·¹µå Á¾·á
+        // ëª¨ë“  ì“°ë ˆë“œ ì¢…ë£Œ
         bool stop_all;
 
-        // Worker ¾²·¹µå
+        // Worker ì“°ë ˆë“œ
         void WorkerThread();
     };
 
@@ -97,12 +97,12 @@ namespace ThreadPool {
                 return;
             }
 
-            // ¸Ç ¾ÕÀÇ job À» »«´Ù.
+            // ë§¨ ì•ì˜ job ì„ ëº€ë‹¤.
             std::function<void()> job = std::move(jobs_.front());
             jobs_.pop();
             lock.unlock();
 
-            // ÇØ´ç job À» ¼öÇàÇÑ´Ù :)
+            // í•´ë‹¹ job ì„ ìˆ˜í–‰í•œë‹¤ :)
             job();
         }
     }
@@ -118,7 +118,7 @@ namespace ThreadPool {
 
     void ThreadPool::EnqueueJob(std::function<void()> job) {
         if (stop_all) {
-            throw std::runtime_error("ThreadPool »ç¿ë ÁßÁöµÊ");
+            throw std::runtime_error("ThreadPool ì‚¬ìš© ì¤‘ì§€ë¨");
         }
         {
             std::lock_guard<std::mutex> lock(m_job_q_);
@@ -129,8 +129,8 @@ namespace ThreadPool {
 
 }  // namespace ThreadPool
 
-//--------------------------------  ÆÄÀÏ ºĞÇÒ  -------------------------------------------------
-//¿ø½ÃÆÄÀÏ ºĞÇÒ ¼öÁ¤º»
+//--------------------------------  íŒŒì¼ ë¶„í•   -------------------------------------------------
+//ì›ì‹œíŒŒì¼ ë¶„í•  ìˆ˜ì •ë³¸
 vector<string> file_splite(string path, string out_path, int block_size) {
     string line;
     vector<string> path_buffer;
@@ -143,7 +143,7 @@ vector<string> file_splite(string path, string out_path, int block_size) {
 
     if (file_read.is_open()) {
         while (finish) {
-            string tp = out_path + to_string(block_count) + ".txt"; //Áß°£ ÆÄÀÏ¸í
+            string tp = out_path + to_string(block_count) + ".txt"; //ì¤‘ê°„ íŒŒì¼ëª…
             path_buffer.push_back(tp);
             ofstream file_wr(tp);
 
@@ -159,7 +159,7 @@ vector<string> file_splite(string path, string out_path, int block_size) {
                     }
                 }
 
-                //ÇÑ ÆÄÀÏ ¸¶¹«¸®
+                //í•œ íŒŒì¼ ë§ˆë¬´ë¦¬
                 file_wr.close();
                 block_count++;
                 line_count = 0;
@@ -168,18 +168,18 @@ vector<string> file_splite(string path, string out_path, int block_size) {
 
     }
     else {
-        cerr << "¿ø½ÃÆÄÀÏ ¿­±â ½ÇÆĞ!!!" << path << endl;
+        cerr << "ì›ì‹œíŒŒì¼ ì—´ê¸° ì‹¤íŒ¨!!!" << path << endl;
         file_read.close();
         return path_buffer;
     }
 
-    cout << "¿ø½ÃÆÄÀÏ ºĞÇÒ ¿Ï·á!!!\n" << endl;
+    cout << "ì›ì‹œíŒŒì¼ ë¶„í•  ì™„ë£Œ!!!\n" << endl;
     file_read.close();
     return path_buffer;
 }
 
-//----------------------------------- ¸Ê¸¸µé±â -------------------------------------------------
-//ÆÄÀÏ ÀĞ±â
+//----------------------------------- ë§µë§Œë“¤ê¸° -------------------------------------------------
+//íŒŒì¼ ì½ê¸°
 vector<string> readFile(string filePath) {
     ifstream file_read(filePath);
     string line;
@@ -200,7 +200,7 @@ vector<string> readFile(string filePath) {
     }
 }
 
-//´Ü¾î ¾ËÆÄºª¸¸ ³²±â±â
+//ë‹¨ì–´ ì•ŒíŒŒë²³ë§Œ ë‚¨ê¸°ê¸°
 string removePunctuation(string word) {
     string in_word = word;
     string result;
@@ -214,7 +214,7 @@ string removePunctuation(string word) {
     return result;
 }
 
-//¶ç¾î¾²±â ´ÜÀ§·Î ÀÚ¸£±â
+//ë„ì–´ì“°ê¸° ë‹¨ìœ„ë¡œ ìë¥´ê¸°
 vector<string> split(string str, char Delimiter) {
     istringstream iss(str);
     string buffer;
@@ -228,7 +228,7 @@ vector<string> split(string str, char Delimiter) {
     return result;
 }
 
-//¸Ê ¸¸µé±â
+//ë§µ ë§Œë“¤ê¸°
 void make_map(string re_f) {
     vector<string> text_line = readFile(re_f);
 
@@ -254,9 +254,9 @@ void make_map(string re_f) {
     return;
 }
 
-//---------------------------------- °¢ ¸Ê Á¤·Ä -------------------------------------------------
+//---------------------------------- ê° ë§µ ì •ë ¬ -------------------------------------------------
 bool comp(string s1, string s2) {
-    return s1 < s2;   // »çÀü ¼ø
+    return s1 < s2;   // ì‚¬ì „ ìˆœ
 }
 
 void solt_map(string re_f) {
@@ -284,7 +284,7 @@ void solt_map(string re_f) {
     }
     return;
 }
-//-------------------------------------- ¸®µà½º -------------------------------------------------
+//-------------------------------------- ë¦¬ë“€ìŠ¤ -------------------------------------------------
 void reduce(string path_map_out, string result_path) {
     vector<KeyValuePair> output;
     string line;
@@ -296,18 +296,18 @@ void reduce(string path_map_out, string result_path) {
 
     if (map_read.is_open()) {
         while (getline(map_read, line)) {
-            istringstream iss(line);// ÀÚ·áÇü¿¡ ¸Â°Ô ÀĞ¾î ÁÜ
+            istringstream iss(line);// ìë£Œí˜•ì— ë§ê²Œ ì½ì–´ ì¤Œ
             string word;
             int count;
 
             iss >> word >> count;
 
             if (word == currentWord) {
-                //¿¬¼ÓµÈ ´Ü¾î ´©Àû Ä«¿îÆ®
+                //ì—°ì†ëœ ë‹¨ì–´ ëˆ„ì  ì¹´ìš´íŠ¸
                 currentCount += count;
             }
             else {
-                // ¿¬¼ÓµÈ ´Ü¾î°¡ ³¡³¯ ¶§ ÀÌÀü ¿¬¼ÓµÇ¾ú´ø ´Ü¾î Ä«¿îÆ® ÀúÀå
+                // ì—°ì†ëœ ë‹¨ì–´ê°€ ëë‚  ë•Œ ì´ì „ ì—°ì†ë˜ì—ˆë˜ ë‹¨ì–´ ì¹´ìš´íŠ¸ ì €ì¥
                 if (!currentWord.empty()) {
                     output.push_back(make_pair(currentWord, currentCount));
                 }
@@ -330,7 +330,7 @@ void reduce(string path_map_out, string result_path) {
     return;
 }
 
-//----------------------------------------- ¿ÜºÎ Á¤·Ä -------------------------------------------
+//----------------------------------------- ì™¸ë¶€ ì •ë ¬ -------------------------------------------
 vector<string> soit_all_file(vector<string> map_path, string path_map_out, int max_size) {
     vector<string> map_path_buffer = map_path;
 
@@ -402,7 +402,7 @@ vector<string> soit_all_file(vector<string> map_path, string path_map_out, int m
 
             }
 
-            //while¹® ÃÊ±âÈ­
+            //whileë¬¸ ì´ˆê¸°í™”
             i += 2;
             line_count = 0;
 
@@ -424,24 +424,24 @@ vector<string> soit_all_file(vector<string> map_path, string path_map_out, int m
 
     return map_path_buffer;
 }
-//--------------------------------------- ÀÌÀü ½ÇÇà±â·Ï Áö¿ì±â ----------------------------------
+//--------------------------------------- ì´ì „ ì‹¤í–‰ê¸°ë¡ ì§€ìš°ê¸° ----------------------------------
 void remove_befor_map_file(string path_map_out) {
     string befor_path_all = path_map_out + "*.*";
     struct _finddata_t fd;
     intptr_t handle;
 
-    vector<string> file_list; //ÆÄÀÏ ¸ñ·Ï
+    vector<string> file_list; //íŒŒì¼ ëª©ë¡
 
     if ((handle = _findfirst(befor_path_all.c_str(), &fd)) == -1L)
         cout << "No file in directory!" << endl;
 
     while (_findnext(handle, &fd) == 0) {
         string tn_p = path_map_out + fd.name;
-        file_list.push_back(tn_p); //ÆÄÀÏ ¸ñ·Ï ÀúÀå
+        file_list.push_back(tn_p); //íŒŒì¼ ëª©ë¡ ì €ì¥
     }
     _findclose(handle);
 
-    for (size_t i = 1; i < file_list.size(); ++i) { //Ã¹ ¼ø¼­´Â ÆÄÀÏÀÌ ¾Æ´Ô
+    for (size_t i = 1; i < file_list.size(); ++i) { //ì²« ìˆœì„œëŠ” íŒŒì¼ì´ ì•„ë‹˜
         const auto& filePath = file_list[i];
         if (std::remove(filePath.c_str()) != 0) {
             std::perror(("Error deleting file: " + filePath).c_str());
@@ -454,7 +454,7 @@ void remove_befor_map_file(string path_map_out) {
 
 }
 
-//---------------------------------------- ½º·¹µå¿ë ÇÔ¼ö -----------------------------------------
+//---------------------------------------- ìŠ¤ë ˆë“œìš© í•¨ìˆ˜ -----------------------------------------
 void thread_make_map(string re_f, vector<bool>& thread_working_cheak,int thread_index, mutex& m) {
     vector<string> text_line = readFile(re_f);
 
@@ -526,18 +526,18 @@ void thread_reduce(string path_map_out, string result_path, vector<bool>& thread
 
     if (map_read.is_open()) {
         while (getline(map_read, line)) {
-            istringstream iss(line);// ÀÚ·áÇü¿¡ ¸Â°Ô ÀĞ¾î ÁÜ
+            istringstream iss(line);// ìë£Œí˜•ì— ë§ê²Œ ì½ì–´ ì¤Œ
             string word;
             int count;
 
             iss >> word >> count;
 
             if (word == currentWord) {
-                //¿¬¼ÓµÈ ´Ü¾î ´©Àû Ä«¿îÆ®
+                //ì—°ì†ëœ ë‹¨ì–´ ëˆ„ì  ì¹´ìš´íŠ¸
                 currentCount += count;
             }
             else {
-                // ¿¬¼ÓµÈ ´Ü¾î°¡ ³¡³¯ ¶§ ÀÌÀü ¿¬¼ÓµÇ¾ú´ø ´Ü¾î Ä«¿îÆ® ÀúÀå
+                // ì—°ì†ëœ ë‹¨ì–´ê°€ ëë‚  ë•Œ ì´ì „ ì—°ì†ë˜ì—ˆë˜ ë‹¨ì–´ ì¹´ìš´íŠ¸ ì €ì¥
                 if (!currentWord.empty()) {
                     output.push_back(make_pair(currentWord, currentCount));
                 }
@@ -564,7 +564,7 @@ void thread_reduce(string path_map_out, string result_path, vector<bool>& thread
     return;
 }
 
-//Å×½ºÆ® ¿ë
+//í…ŒìŠ¤íŠ¸ ìš©
 void thread_reduce02(string path_map_out, string result_path, vector<bool>& thread_working_cheak, int thread_index, mutex& m) {
     string currentWord;
     int currentCount = 0;
@@ -574,7 +574,7 @@ void thread_reduce02(string path_map_out, string result_path, vector<bool>& thre
         ofstream file_wr(result_path);
         if (file_wr.is_open()) {
             for (int i = 0; i < text_line.size(); i++) {
-                istringstream iss(text_line[i]);// ÀÚ·áÇü¿¡ ¸Â°Ô ÀĞ¾î ÁÜ
+                istringstream iss(text_line[i]);// ìë£Œí˜•ì— ë§ê²Œ ì½ì–´ ì¤Œ
                 string word;
                 int count;
 
@@ -582,11 +582,11 @@ void thread_reduce02(string path_map_out, string result_path, vector<bool>& thre
                 
 
                 if (word == currentWord) {
-                    //¿¬¼ÓµÈ ´Ü¾î ´©Àû Ä«¿îÆ®
+                    //ì—°ì†ëœ ë‹¨ì–´ ëˆ„ì  ì¹´ìš´íŠ¸
                     currentCount += count;
                 }
                 else {
-                    // ¿¬¼ÓµÈ ´Ü¾î°¡ ³¡³¯ ¶§ ÀÌÀü ¿¬¼ÓµÇ¾ú´ø ´Ü¾î Ä«¿îÆ® ÀúÀå
+                    // ì—°ì†ëœ ë‹¨ì–´ê°€ ëë‚  ë•Œ ì´ì „ ì—°ì†ë˜ì—ˆë˜ ë‹¨ì–´ ì¹´ìš´íŠ¸ ì €ì¥
                     if (!currentWord.empty()) {
                         file_wr << currentWord + " " + to_string(currentCount) + "\n";
                     }
@@ -618,39 +618,39 @@ int find_available_thread_index(vector<bool>& thread_working_cheak) {
     return 100;
 }
 
-//------------------------------------------ ¹öÀü ³ª´©±â -----------------------------------------
+//------------------------------------------ ë²„ì „ ë‚˜ëˆ„ê¸° -----------------------------------------
 
 void normal_mode() {
-    //ÀÌÀü¿¡ »ı¼ºÇÑ map °á°ú ÆÄÀÏ Áö¿ì±â
+    //ì´ì „ì— ìƒì„±í•œ map ê²°ê³¼ íŒŒì¼ ì§€ìš°ê¸°
     remove_befor_map_file(path_map_out);
     start = time(NULL);
-    //¿ø½ÃÆÄÀÏ ºĞÇÒ
-    cout << "¿ø½ÃÆÄÀÏ ºĞÇÒ ½ÃÀÛ" << endl;
+    //ì›ì‹œíŒŒì¼ ë¶„í• 
+    cout << "ì›ì‹œíŒŒì¼ ë¶„í•  ì‹œì‘" << endl;
     vector<string> map_path_list = file_splite(path_in, path_map_out, block_size);
 
     if (map_path_list.size() >= 1) {
-        //°¢ ºĞÇÒÆÄÀÏ ¸Ê È­ ½ÃÅ°±â
-        cout << "¸Ê ¿¬»ê ½ÃÀÛ" << endl;
+        //ê° ë¶„í• íŒŒì¼ ë§µ í™” ì‹œí‚¤ê¸°
+        cout << "ë§µ ì—°ì‚° ì‹œì‘" << endl;
         for (int i = 0; i < map_path_list.size(); i++) {
             make_map(map_path_list[i]);
         }
-        cout << "¸Ê ¿¬»ê ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì—°ì‚° ì™„ë£Œ!!!\n" << endl;
 
-        //°¢ ¸Ê Á¤·Ä
-        cout << "¸Ê Á¤·Ä ½ÃÀÛ" << endl;
+        //ê° ë§µ ì •ë ¬
+        cout << "ë§µ ì •ë ¬ ì‹œì‘" << endl;
         for (int i = 0; i < map_path_list.size(); i++) {
             solt_map(map_path_list[i]);
         }
-        cout << "¸Ê Á¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
 
-        //¿ÜºÎ Á¤·Ä
-        cout << "¿ÜºÎÁ¤·Ä ½ÃÀÛ" << endl;
+        //ì™¸ë¶€ ì •ë ¬
+        cout << "ì™¸ë¶€ì •ë ¬ ì‹œì‘" << endl;
         vector<string> map_path_final = soit_all_file(map_path_list, path_map_out, word_size);
         if (map_path_final.size() != map_path_list.size()) {
             map_path_list.clear();
         }
 
-        //¾µ¸ğ¾ø´Â ÆÄÀÏ Á¦°Å
+        //ì“¸ëª¨ì—†ëŠ” íŒŒì¼ ì œê±°
         for (size_t i = 0; i < map_path_final.size() - 1; ++i) {
             const auto& filePath = map_path_final[i];
             if (std::remove(filePath.c_str()) != 0) {
@@ -660,12 +660,12 @@ void normal_mode() {
                 std::cout << "File successfully deleted: " << filePath << '\n';
             }
         }
-        cout << "¿ÜºÎÁ¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ì™¸ë¶€ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
         string fianl_path = map_path_final[map_path_final.size() - 1];
         map_path_final.clear();
 
-        //¸®µà½º
-        cout << "¸¶Áö¸· ¸®µà½º ½ÃÀÛ" << endl;
+        //ë¦¬ë“€ìŠ¤
+        cout << "ë§ˆì§€ë§‰ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
         reduce(fianl_path, path_result);
     }
 
@@ -676,48 +676,48 @@ void normal_mode() {
     sec = (int)duration % 60;
 
     printWordCounts();
-    printf("»ç¿ë½Ã°£ : %dºĞ %dÃÊ\n", minaute, sec);
+    printf("ì‚¬ìš©ì‹œê°„ : %dë¶„ %dì´ˆ\n", minaute, sec);
     waitForEnter();
 }
 
 void middle_reduce_mode() {
-    //ÀÌÀü¿¡ »ı¼ºÇÑ map °á°ú ÆÄÀÏ Áö¿ì±â
+    //ì´ì „ì— ìƒì„±í•œ map ê²°ê³¼ íŒŒì¼ ì§€ìš°ê¸°
     remove_befor_map_file(path_map_out);
     start = time(NULL);
-    //¿ø½ÃÆÄÀÏ ºĞÇÒ
-    cout << "¿ø½ÃÆÄÀÏ ºĞÇÒ ½ÃÀÛ" << endl;
+    //ì›ì‹œíŒŒì¼ ë¶„í• 
+    cout << "ì›ì‹œíŒŒì¼ ë¶„í•  ì‹œì‘" << endl;
     vector<string> map_path_list = file_splite(path_in, path_map_out, block_size);
 
     if (map_path_list.size() >= 1) {
-        //°¢ ºĞÇÒÆÄÀÏ ¸Ê È­ ½ÃÅ°±â
-        cout << "¸Ê ¿¬»ê ½ÃÀÛ" << endl;
+        //ê° ë¶„í• íŒŒì¼ ë§µ í™” ì‹œí‚¤ê¸°
+        cout << "ë§µ ì—°ì‚° ì‹œì‘" << endl;
         for (int i = 0; i < map_path_list.size(); i++) {
             make_map(map_path_list[i]);
         }
-        cout << "¸Ê ¿¬»ê ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì—°ì‚° ì™„ë£Œ!!!\n" << endl;
 
-        //°¢ ¸Ê Á¤·Ä
-        cout << "¸Ê Á¤·Ä ½ÃÀÛ" << endl;
+        //ê° ë§µ ì •ë ¬
+        cout << "ë§µ ì •ë ¬ ì‹œì‘" << endl;
         for (int i = 0; i < map_path_list.size(); i++) {
             solt_map(map_path_list[i]);
         }
-        cout << "¸Ê Á¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
 
-        //Áß°£ ¸®µà½º
-        cout << "¸Ê Áß°£ ¸®µà½º ½ÃÀÛ" << endl;
+        //ì¤‘ê°„ ë¦¬ë“€ìŠ¤
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
         for (int i = 0; i < map_path_list.size(); i++) {
             reduce(map_path_list[i], map_path_list[i]);
         }
-        cout << "¸Ê Áß°£ ¸®µà½º ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì™„ë£Œ!!!\n" << endl;
 
-        //¿ÜºÎ Á¤·Ä
-        cout << "¿ÜºÎÁ¤·Ä ½ÃÀÛ" << endl;
+        //ì™¸ë¶€ ì •ë ¬
+        cout << "ì™¸ë¶€ì •ë ¬ ì‹œì‘" << endl;
         vector<string> map_path_final = soit_all_file(map_path_list, path_map_out, word_size);
         if (map_path_final.size() != map_path_list.size()) {
             map_path_list.clear();
         }
 
-        //¾µ¸ğ¾ø´Â ÆÄÀÏ Á¦°Å
+        //ì“¸ëª¨ì—†ëŠ” íŒŒì¼ ì œê±°
         for (size_t i = 0; i < map_path_final.size() - 1; ++i) {
             const auto& filePath = map_path_final[i];
             if (std::remove(filePath.c_str()) != 0) {
@@ -727,12 +727,12 @@ void middle_reduce_mode() {
                 std::cout << "File successfully deleted: " << filePath << '\n';
             }
         }
-        cout << "¿ÜºÎÁ¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ì™¸ë¶€ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
         string fianl_path = map_path_final[map_path_final.size() - 1];
         map_path_final.clear();
 
-        //¸®µà½º
-        cout << "¸¶Áö¸· ¸®µà½º ½ÃÀÛ" << endl;
+        //ë¦¬ë“€ìŠ¤
+        cout << "ë§ˆì§€ë§‰ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
         reduce(fianl_path, path_result);
     }
 
@@ -743,36 +743,36 @@ void middle_reduce_mode() {
     sec = (int)duration % 60;
 
     printWordCounts();
-    printf("»ç¿ë½Ã°£ : %dºĞ %dÃÊ\n", minaute, sec);
+    printf("ì‚¬ìš©ì‹œê°„ : %dë¶„ %dì´ˆ\n", minaute, sec);
     waitForEnter();
 }
 
-//È®·üÀÇÁ¸ ½º·¹µå »ç¿ë
+//í™•ë¥ ì˜ì¡´ ìŠ¤ë ˆë“œ ì‚¬ìš©
 void middle_reduce_thread_mode() {
-    //ÀÌÀü¿¡ »ı¼ºÇÑ map °á°ú ÆÄÀÏ Áö¿ì±â
+    //ì´ì „ì— ìƒì„±í•œ map ê²°ê³¼ íŒŒì¼ ì§€ìš°ê¸°
     remove_befor_map_file(path_map_out);
 
-    cout << "¿ø½Ã ÆÄÀÏ ºĞÇÒ ½ÃÀÛ" << endl;
+    cout << "ì›ì‹œ íŒŒì¼ ë¶„í•  ì‹œì‘" << endl;
     start = time(NULL);
 
-    //¿ø½ÃÆÄÀÏ ºĞÇÒ
+    //ì›ì‹œíŒŒì¼ ë¶„í• 
     vector<string> map_path_list = file_splite(path_in, path_map_out, block_size);
 
-    //½º·¹µå °ü¸® º¤ÅÍ
+    //ìŠ¤ë ˆë“œ ê´€ë¦¬ ë²¡í„°
     vector<thread> threads;
     int k = 0;
     int finish_work_count = 0;
     
     if (map_path_list.size() >= 1) {
-        //°¢ ÆÄÀÏ ¸Ê È­
-        cout << "¸Ê ¿¬»ê ½ÃÀÛ" << endl;
+        //ê° íŒŒì¼ ë§µ í™”
+        cout << "ë§µ ì—°ì‚° ì‹œì‘" << endl;
         while (!(finish_work_count == map_path_list.size())) {
-            if (threads.size() < thread_size) { //½º·¹µå°¡ ÇÑ°èÄ¡°¡ ¾Æ´Ò ¶§
+            if (threads.size() < thread_size) { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ê°€ ì•„ë‹ ë•Œ
                 if (k < map_path_list.size()) {
                     threads.push_back(thread(make_map, map_path_list[k]));
                     k++;
                 }
-                else { //´õÀÌ»ó Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                else { //ë”ì´ìƒ ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                     if (threads[0].joinable()) {
                         threads[0].join();
                         if (threads.size() != 1)
@@ -781,7 +781,7 @@ void middle_reduce_thread_mode() {
                     }
                 }
             }
-            else { //½º·¹µå°¡ ÇÑ°èÄ¡ ¸¹Å­ ÀÛµ¿ÁßÀÏ ¶§
+            else { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ ë§í¼ ì‘ë™ì¤‘ì¼ ë•Œ
                 if (threads[0].joinable()) {
                     threads[0].join();
                     if (threads.size() != 1)
@@ -793,17 +793,17 @@ void middle_reduce_thread_mode() {
         k = 0;
         finish_work_count = 0;
         threads.clear();
-        cout << "¸Ê ¿¬»ê ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì—°ì‚° ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¸Ê Á¤·Ä ½ÃÀÛ" << endl;
-        //°¢ ¸Ê Á¤·Ä
+        cout << "ë§µ ì •ë ¬ ì‹œì‘" << endl;
+        //ê° ë§µ ì •ë ¬
         while (!(finish_work_count == map_path_list.size())) {
             if (threads.size() < thread_size) {
                 if (k < map_path_list.size()) {
                     threads.push_back(thread(solt_map, map_path_list[k]));
                     k++;
                 }
-                else { //´õÀÌ»ó Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                else { //ë”ì´ìƒ ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                     if (threads[0].joinable()) {
                         threads[0].join();
                         if (threads.size() != 1)
@@ -824,17 +824,17 @@ void middle_reduce_thread_mode() {
         k = 0;
         finish_work_count = 0;
         threads.clear();
-        cout << "¸Ê Á¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¸Ê Áß°£ ¸®µà½º ½ÃÀÛ" << endl;
-        //°¢ ¸Ê Áß°£ ¸®µà½º
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
+        //ê° ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤
         while (!(finish_work_count == map_path_list.size())) {
             if (threads.size() < thread_size) {
                 if (k < map_path_list.size()) {
                     threads.push_back(thread(reduce, map_path_list[k], map_path_list[k]));
                     k++;
                 }
-                else { //´õÀÌ»ó Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                else { //ë”ì´ìƒ ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                     if (threads[0].joinable()) {
                         threads[0].join();
                         if (threads.size() != 1)
@@ -855,16 +855,16 @@ void middle_reduce_thread_mode() {
         k = 0;
         finish_work_count = 0;
         threads.clear();
-        cout << "¸Ê Áß°£ ¸®µà½º ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¿ÜºÎÁ¤·Ä ½ÃÀÛ " << endl;
-        //¿ÜºÎ Á¤·Ä
+        cout << "ì™¸ë¶€ì •ë ¬ ì‹œì‘ " << endl;
+        //ì™¸ë¶€ ì •ë ¬
         vector<string> map_path_final = soit_all_file(map_path_list, path_map_out, word_size);
         if (map_path_final.size() != map_path_list.size()) {
             map_path_list.clear();
         }
 
-        //¾µ¸ğ¾ø´Â ÆÄÀÏ Á¦°Å
+        //ì“¸ëª¨ì—†ëŠ” íŒŒì¼ ì œê±°
         for (size_t i = 0; i < map_path_final.size() - 1; ++i) {
             const auto& filePath = map_path_final[i];
             if (std::remove(filePath.c_str()) != 0) {
@@ -876,10 +876,10 @@ void middle_reduce_thread_mode() {
         }
         string fianl_path = map_path_final[map_path_final.size() - 1];
         map_path_final.clear();
-        cout << "¿ÜºÎÁ¤·Ä ¿Ï·á!!! \n" << endl;
+        cout << "ì™¸ë¶€ì •ë ¬ ì™„ë£Œ!!! \n" << endl;
 
-        cout << "¸¶Áö¸· ¸®µà½º ½ÃÀÛ" << endl;
-        //¸®µà½º
+        cout << "ë§ˆì§€ë§‰ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
+        //ë¦¬ë“€ìŠ¤
         reduce(fianl_path, path_result);
     }
 
@@ -890,60 +890,60 @@ void middle_reduce_thread_mode() {
     sec = (int)duration % 60;
 
     printWordCounts();
-    printf("»ç¿ë½Ã°£ : %dºĞ %dÃÊ\n", minaute, sec);
+    printf("ì‚¬ìš©ì‹œê°„ : %dë¶„ %dì´ˆ\n", minaute, sec);
     waitForEnter();
 }
 
-//½º·¹µå Ç® »ç¿ë
+//ìŠ¤ë ˆë“œ í’€ ì‚¬ìš©
 void middle_reduce_thread_mode02() {
-    //ÀÌÀü¿¡ »ı¼ºÇÑ map °á°ú ÆÄÀÏ Áö¿ì±â
+    //ì´ì „ì— ìƒì„±í•œ map ê²°ê³¼ íŒŒì¼ ì§€ìš°ê¸°
     remove_befor_map_file(path_map_out);
 
-    cout << "¿ø½Ã ÆÄÀÏ ºĞÇÒ ½ÃÀÛ" << endl;
+    cout << "ì›ì‹œ íŒŒì¼ ë¶„í•  ì‹œì‘" << endl;
     start = time(NULL);
 
-    //¿ø½ÃÆÄÀÏ ºĞÇÒ
+    //ì›ì‹œíŒŒì¼ ë¶„í• 
     vector<string> map_path_list = file_splite(path_in, path_map_out, block_size);
 
     if (map_path_list.size() >= 1) {
-        //°¢ ÆÄÀÏ ¸Ê È­
-        cout << "¸Ê ¿¬»ê ½ÃÀÛ" << endl;
+        //ê° íŒŒì¼ ë§µ í™”
+        cout << "ë§µ ì—°ì‚° ì‹œì‘" << endl;
         {
             ThreadPool::ThreadPool pool(thread_size);
             for (int i = 0; i < map_path_list.size(); i++) {
                 pool.EnqueueJob([&map_path_list, i]() { make_map(map_path_list[i]); });
             }
         }
-        cout << "¸Ê ¿¬»ê ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì—°ì‚° ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¸Ê Á¤·Ä ½ÃÀÛ" << endl;
-        //°¢ ¸Ê Á¤·Ä
+        cout << "ë§µ ì •ë ¬ ì‹œì‘" << endl;
+        //ê° ë§µ ì •ë ¬
         {
             ThreadPool::ThreadPool pool(thread_size);
             for (int i = 0; i < map_path_list.size(); i++) {
                 pool.EnqueueJob([&map_path_list, i]() { solt_map(map_path_list[i]); });
             }
         }
-        cout << "¸Ê Á¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¸Ê Áß°£ ¸®µà½º ½ÃÀÛ" << endl;
-        //°¢ ¸Ê Áß°£ ¸®µà½º
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
+        //ê° ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤
         {
             ThreadPool::ThreadPool pool(thread_size);
             for (int i = 0; i < map_path_list.size(); i++) {
                 pool.EnqueueJob([&map_path_list, i]() { reduce(map_path_list[i], map_path_list[i]); });
             }
         }
-        cout << "¸Ê Áß°£ ¸®µà½º ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¿ÜºÎÁ¤·Ä ½ÃÀÛ " << endl;
-        //¿ÜºÎ Á¤·Ä
+        cout << "ì™¸ë¶€ì •ë ¬ ì‹œì‘ " << endl;
+        //ì™¸ë¶€ ì •ë ¬
         vector<string> map_path_final = soit_all_file(map_path_list, path_map_out, word_size);
         if (map_path_final.size() != map_path_list.size()) {
             map_path_list.clear();
         }
 
-        //¾µ¸ğ¾ø´Â ÆÄÀÏ Á¦°Å
+        //ì“¸ëª¨ì—†ëŠ” íŒŒì¼ ì œê±°
         for (size_t i = 0; i < map_path_final.size() - 1; ++i) {
             const auto& filePath = map_path_final[i];
             if (std::remove(filePath.c_str()) != 0) {
@@ -955,10 +955,10 @@ void middle_reduce_thread_mode02() {
         }
         string fianl_path = map_path_final[map_path_final.size() - 1];
         map_path_final.clear();
-        cout << "¿ÜºÎÁ¤·Ä ¿Ï·á!!! \n" << endl;
+        cout << "ì™¸ë¶€ì •ë ¬ ì™„ë£Œ!!! \n" << endl;
 
-        cout << "¸¶Áö¸· ¸®µà½º ½ÃÀÛ" << endl;
-        //¸®µà½º
+        cout << "ë§ˆì§€ë§‰ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
+        //ë¦¬ë“€ìŠ¤
         reduce(fianl_path, path_result);
     }
 
@@ -969,23 +969,23 @@ void middle_reduce_thread_mode02() {
     sec = (int)duration % 60;
 
     printWordCounts();
-    printf("»ç¿ë½Ã°£ : %dºĞ %dÃÊ\n", minaute, sec);
+    printf("ì‚¬ìš©ì‹œê°„ : %dë¶„ %dì´ˆ\n", minaute, sec);
     waitForEnter();
 }
 
-//½º·¹µå Ç®Àº »ç¿ë ¾ÈÇÏ°í mutex, lock¸¸ »ç¿ë - ÃÖÁ¾.... ¿øÇÏ´Â ¸ğ¾çÀÇ µ¿ÀÛ(¼º´Éº¯È­´Â ¾øÀ½?)
+//ìŠ¤ë ˆë“œ í’€ì€ ì‚¬ìš© ì•ˆí•˜ê³  mutex, lockë§Œ ì‚¬ìš© - ìµœì¢….... ì›í•˜ëŠ” ëª¨ì–‘ì˜ ë™ì‘(ì„±ëŠ¥ë³€í™”ëŠ” ì—†ìŒ?)
 void middle_reduce_thread_mode03() {
-    //ÀÌÀü¿¡ »ı¼ºÇÑ map °á°ú ÆÄÀÏ Áö¿ì±â
+    //ì´ì „ì— ìƒì„±í•œ map ê²°ê³¼ íŒŒì¼ ì§€ìš°ê¸°
     remove_befor_map_file(path_map_out);
 
-    cout << "¿ø½Ã ÆÄÀÏ ºĞÇÒ ½ÃÀÛ" << endl;
+    cout << "ì›ì‹œ íŒŒì¼ ë¶„í•  ì‹œì‘" << endl;
     start = time(NULL);
 
-    //¿ø½ÃÆÄÀÏ ºĞÇÒ
+    //ì›ì‹œíŒŒì¼ ë¶„í• 
     vector<string> map_path_list = file_splite(path_in, path_map_out, block_size);
     
 
-    //½º·¹µå °ü¸® º¤ÅÍ
+    //ìŠ¤ë ˆë“œ ê´€ë¦¬ ë²¡í„°
     vector<thread> threads;
     vector<bool> thread_working_cheak;
     mutex m;
@@ -995,19 +995,19 @@ void middle_reduce_thread_mode03() {
     int finish_work_count = 0;
 
     if (map_path_list.size() >= 1) {
-        //°¢ ÆÄÀÏ ¸Ê È­
-        cout << "¸Ê ¿¬»ê ½ÃÀÛ" << endl;
+        //ê° íŒŒì¼ ë§µ í™”
+        cout << "ë§µ ì—°ì‚° ì‹œì‘" << endl;
         while (!(finish_work_count >= map_path_list.size())) {
-            if (threads.size() < thread_size) { //½º·¹µå°¡ ÇÑ°èÄ¡°¡ ¾Æ´Ò ¶§
+            if (threads.size() < thread_size) { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ê°€ ì•„ë‹ ë•Œ
                 
-                if (k < map_path_list.size()) { //Ãß°¡ÇÒ ÀÛ¾øÀÌ ÀÖÀ» ¶§
+                if (k < map_path_list.size()) { //ì¶”ê°€í•  ì‘ì—†ì´ ìˆì„ ë•Œ
                     threads.push_back(thread(thread_make_map, map_path_list[k], ref(thread_working_cheak), k, ref(m)));
                     m.lock();
                     thread_working_cheak.push_back(false);
                     m.unlock();
                     k++;
                 }
-                else { //´õÀÌ»ó Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                else { //ë”ì´ìƒ ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                     for (int i = 0; i < threads.size(); i++) {
                         if (threads[i].joinable()) {
                             threads[i].join();
@@ -1017,13 +1017,13 @@ void middle_reduce_thread_mode03() {
                     
                 }
             }
-            else { //½º·¹µå°¡ ÇÑ°èÄ¡ ¸¹Å­ ÀÛµ¿ÁßÀÏ ¶§
+            else { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ ë§í¼ ì‘ë™ì¤‘ì¼ ë•Œ
                 m.lock();
                 available_thread_index = find_available_thread_index(thread_working_cheak);
                 m.unlock();
 
-                if (available_thread_index != 100) { //ÀÛ¾÷ÀÌ ³¡³­ ½º·¹µå°¡ Á¸Àç ÇÒ ¶§
-                    if (k < map_path_list.size()) { //Ãß°¡ÇÒ ÀÛ¾øÀÌ ÀÖÀ» ¶§
+                if (available_thread_index != 100) { //ì‘ì—…ì´ ëë‚œ ìŠ¤ë ˆë“œê°€ ì¡´ì¬ í•  ë•Œ
+                    if (k < map_path_list.size()) { //ì¶”ê°€í•  ì‘ì—†ì´ ìˆì„ ë•Œ
                         if (threads[available_thread_index].joinable()) {
                             threads[available_thread_index].join();
                             finish_work_count++;
@@ -1036,7 +1036,7 @@ void middle_reduce_thread_mode03() {
                         }
 
                     }
-                    else { //Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                    else { //ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                         for (int i = 0; i < threads.size(); i++) {
                             if (threads[i].joinable()) {
                                 threads[i].join();
@@ -1058,21 +1058,21 @@ void middle_reduce_thread_mode03() {
         available_thread_index = 0;
         threads.clear();
         thread_working_cheak.clear();
-        cout << "¸Ê ¿¬»ê ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì—°ì‚° ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¸Ê Á¤·Ä ½ÃÀÛ" << endl;
-        //°¢ ¸Ê Á¤·Ä
+        cout << "ë§µ ì •ë ¬ ì‹œì‘" << endl;
+        //ê° ë§µ ì •ë ¬
         while (!(finish_work_count >= map_path_list.size())) {
-            if (threads.size() < thread_size) { //½º·¹µå°¡ ÇÑ°èÄ¡°¡ ¾Æ´Ò ¶§
+            if (threads.size() < thread_size) { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ê°€ ì•„ë‹ ë•Œ
 
-                if (k < map_path_list.size()) { //Ãß°¡ÇÒ ÀÛ¾øÀÌ ÀÖÀ» ¶§
+                if (k < map_path_list.size()) { //ì¶”ê°€í•  ì‘ì—†ì´ ìˆì„ ë•Œ
                     threads.push_back(thread(thread_solt_map, map_path_list[k], ref(thread_working_cheak), k, ref(m)));
                     m.lock();
                     thread_working_cheak.push_back(false);
                     m.unlock();
                     k++;
                 }
-                else { //´õÀÌ»ó Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                else { //ë”ì´ìƒ ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                     for (int i = 0; i < threads.size(); i++) {
                         if (threads[i].joinable()) {
                             threads[i].join();
@@ -1082,13 +1082,13 @@ void middle_reduce_thread_mode03() {
 
                 }
             }
-            else { //½º·¹µå°¡ ÇÑ°èÄ¡ ¸¹Å­ ÀÛµ¿ÁßÀÏ ¶§
+            else { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ ë§í¼ ì‘ë™ì¤‘ì¼ ë•Œ
                 m.lock();
                 available_thread_index = find_available_thread_index(thread_working_cheak);
                 m.unlock();
 
-                if (available_thread_index != 100) { //ÀÛ¾÷ÀÌ ³¡³­ ½º·¹µå°¡ Á¸Àç ÇÒ ¶§
-                    if (k < map_path_list.size()) { //Ãß°¡ÇÒ ÀÛ¾øÀÌ ÀÖÀ» ¶§
+                if (available_thread_index != 100) { //ì‘ì—…ì´ ëë‚œ ìŠ¤ë ˆë“œê°€ ì¡´ì¬ í•  ë•Œ
+                    if (k < map_path_list.size()) { //ì¶”ê°€í•  ì‘ì—†ì´ ìˆì„ ë•Œ
                         if (threads[available_thread_index].joinable()) {
                             threads[available_thread_index].join();
                             finish_work_count++;
@@ -1101,7 +1101,7 @@ void middle_reduce_thread_mode03() {
                         }
 
                     }
-                    else { //Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                    else { //ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                         for (int i = 0; i < threads.size(); i++) {
                             if (threads[i].joinable()) {
                                 threads[i].join();
@@ -1123,21 +1123,21 @@ void middle_reduce_thread_mode03() {
         available_thread_index = 0;
         threads.clear();
         thread_working_cheak.clear();
-        cout << "¸Ê Á¤·Ä ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì •ë ¬ ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¸Ê Áß°£ ¸®µà½º ½ÃÀÛ" << endl;
-        //°¢ ¸Ê Áß°£ ¸®µà½º
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
+        //ê° ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤
         while (!(finish_work_count >= map_path_list.size())) {
-            if (threads.size() < thread_size) { //½º·¹µå°¡ ÇÑ°èÄ¡°¡ ¾Æ´Ò ¶§
+            if (threads.size() < thread_size) { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ê°€ ì•„ë‹ ë•Œ
 
-                if (k < map_path_list.size()) { //Ãß°¡ÇÒ ÀÛ¾øÀÌ ÀÖÀ» ¶§
+                if (k < map_path_list.size()) { //ì¶”ê°€í•  ì‘ì—†ì´ ìˆì„ ë•Œ
                     threads.push_back(thread(thread_reduce, map_path_list[k], map_path_list[k], ref(thread_working_cheak), k, ref(m)));
                     m.lock();
                     thread_working_cheak.push_back(false);
                     m.unlock();
                     k++;
                 }
-                else { //´õÀÌ»ó Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                else { //ë”ì´ìƒ ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                     for (int i = 0; i < threads.size(); i++) {
                         if (threads[i].joinable()) {
                             threads[i].join();
@@ -1147,13 +1147,13 @@ void middle_reduce_thread_mode03() {
 
                 }
             }
-            else { //½º·¹µå°¡ ÇÑ°èÄ¡ ¸¹Å­ ÀÛµ¿ÁßÀÏ ¶§
+            else { //ìŠ¤ë ˆë“œê°€ í•œê³„ì¹˜ ë§í¼ ì‘ë™ì¤‘ì¼ ë•Œ
                 m.lock();
                 available_thread_index = find_available_thread_index(thread_working_cheak);
                 m.unlock();
 
-                if (available_thread_index != 100) { //ÀÛ¾÷ÀÌ ³¡³­ ½º·¹µå°¡ Á¸Àç ÇÒ ¶§
-                    if (k < map_path_list.size()) { //Ãß°¡ÇÒ ÀÛ¾øÀÌ ÀÖÀ» ¶§
+                if (available_thread_index != 100) { //ì‘ì—…ì´ ëë‚œ ìŠ¤ë ˆë“œê°€ ì¡´ì¬ í•  ë•Œ
+                    if (k < map_path_list.size()) { //ì¶”ê°€í•  ì‘ì—†ì´ ìˆì„ ë•Œ
                         if (threads[available_thread_index].joinable()) {
                             threads[available_thread_index].join();
                             finish_work_count++;
@@ -1166,7 +1166,7 @@ void middle_reduce_thread_mode03() {
                         }
 
                     }
-                    else { //Ãß°¡ÇÒ ÀÛ¾÷ÀÌ ¾øÀ» ¶§
+                    else { //ì¶”ê°€í•  ì‘ì—…ì´ ì—†ì„ ë•Œ
                         for (int i = 0; i < threads.size(); i++) {
                             if (threads[i].joinable()) {
                                 threads[i].join();
@@ -1188,16 +1188,16 @@ void middle_reduce_thread_mode03() {
         available_thread_index = 0;
         threads.clear();
         thread_working_cheak.clear();
-        cout << "¸Ê Áß°£ ¸®µà½º ¿Ï·á!!!\n" << endl;
+        cout << "ë§µ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ì™„ë£Œ!!!\n" << endl;
 
-        cout << "¿ÜºÎÁ¤·Ä ½ÃÀÛ " << endl;
-        //¿ÜºÎ Á¤·Ä
+        cout << "ì™¸ë¶€ì •ë ¬ ì‹œì‘ " << endl;
+        //ì™¸ë¶€ ì •ë ¬
         vector<string> map_path_final = soit_all_file(map_path_list, path_map_out, word_size);
         if (map_path_final.size() != map_path_list.size()) {
             map_path_list.clear();
         }
 
-        //¾µ¸ğ¾ø´Â ÆÄÀÏ Á¦°Å
+        //ì“¸ëª¨ì—†ëŠ” íŒŒì¼ ì œê±°
         for (size_t i = 0; i < map_path_final.size() - 1; ++i) {
             const auto& filePath = map_path_final[i];
             if (std::remove(filePath.c_str()) != 0) {
@@ -1209,10 +1209,10 @@ void middle_reduce_thread_mode03() {
         }
         string fianl_path = map_path_final[map_path_final.size() - 1];
         map_path_final.clear();
-        cout << "¿ÜºÎÁ¤·Ä ¿Ï·á!!! \n" << endl;
+        cout << "ì™¸ë¶€ì •ë ¬ ì™„ë£Œ!!! \n" << endl;
 
-        cout << "¸¶Áö¸· ¸®µà½º ½ÃÀÛ" << endl;
-        //¸®µà½º
+        cout << "ë§ˆì§€ë§‰ ë¦¬ë“€ìŠ¤ ì‹œì‘" << endl;
+        //ë¦¬ë“€ìŠ¤
         reduce(fianl_path, path_result);
     }
 
@@ -1223,7 +1223,7 @@ void middle_reduce_thread_mode03() {
     sec = (int)duration % 60;
 
     printWordCounts();
-    printf("»ç¿ë½Ã°£ : %dºĞ %dÃÊ\n", minaute, sec);
+    printf("ì‚¬ìš©ì‹œê°„ : %dë¶„ %dì´ˆ\n", minaute, sec);
     waitForEnter();
 }
 
@@ -1275,7 +1275,7 @@ void showMenuOptions() {
     showMainMenu();
 }
 
-//¿£ÅÍÅ° À§Ä¡ Á¦¾î 
+//ì—”í„°í‚¤ ìœ„ì¹˜ ì œì–´ 
 void handleEnterKey() {
     switch (currentMenu) {
     case 1:
@@ -1291,14 +1291,14 @@ void handleEnterKey() {
         break;
     }
 }
-//¸Ş´ºÈ­¸é Ãâ·ÂÇÏ±â
+//ë©”ë‰´í™”ë©´ ì¶œë ¥í•˜ê¸°
 void modeMenuScreen() {
     system("cls");
-    std::cout << "\t\t\t\t***** ¿¬»ê ¸ğµå ¼±ÅÃ *****\n";
-    std::cout << "\t\t\t\t 1. ±âº» ¸ğµå\n";
-    std::cout << "\t\t\t\t 2. Áß°£ ¸®µà½º ¸ğµå\n";
-    std::cout << "\t\t\t\t 3. ½º·¹µå Áß°£ ¸®µà½º ¸ğµå\n";
-    std::cout << "\t\t\t\t¹øÈ£¸¦ ÀÔ·ÂÇØ °á°ú¸¦ È®ÀÎÇÏ¼¼¿ä\n";
+    std::cout << "\t\t\t\t***** ì—°ì‚° ëª¨ë“œ ì„ íƒ *****\n";
+    std::cout << "\t\t\t\t 1. ê¸°ë³¸ ëª¨ë“œ\n";
+    std::cout << "\t\t\t\t 2. ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ëª¨ë“œ\n";
+    std::cout << "\t\t\t\t 3. ìŠ¤ë ˆë“œ ì¤‘ê°„ ë¦¬ë“€ìŠ¤ ëª¨ë“œ\n";
+    std::cout << "\t\t\t\të²ˆí˜¸ë¥¼ ì…ë ¥í•´ ê²°ê³¼ë¥¼ í™•ì¸í•˜ì„¸ìš”\n";
 
     char userInput = _getch();
     int selectedDan = userInput - '0';
@@ -1307,16 +1307,16 @@ void modeMenuScreen() {
         tryProgram(selectedDan);
     }
     else {
-        std::cout << "\t\t\t\tÀß¸øµÈ ÀÔ·ÂÀÔ´Ï´Ù.\n";
+        std::cout << "\t\t\t\tì˜ëª»ëœ ì…ë ¥ì…ë‹ˆë‹¤.\n";
         waitForEnter();
     }
 }
 
 void tryProgram(int dan) {
     system("cls");
-    std::cout << "\t\t\t\t***** " << dan << "¹ø ÀÔ·Â µ¿ÀÛ½ÃÀÛÇÕ´Ï´Ù *****\n";
+    std::cout << "\t\t\t\t***** " << dan << "ë²ˆ ì…ë ¥ ë™ì‘ì‹œì‘í•©ë‹ˆë‹¤ *****\n";
 
-    //Ãß°¡ÀûÀÎ°Å ±â´É±¸ÇöÇÏ±â
+    //ì¶”ê°€ì ì¸ê±° ê¸°ëŠ¥êµ¬í˜„í•˜ê¸°
     switch (dan) {
     case 1: {
         normal_mode();
@@ -1333,7 +1333,7 @@ void tryProgram(int dan) {
         break;
     }
     default:
-        std::cout << "\t\t\t\tÀß¸øµÈ ÀÔ·ÂÀÔ´Ï´Ù.\n";
+        std::cout << "\t\t\t\tì˜ëª»ëœ ì…ë ¥ì…ë‹ˆë‹¤.\n";
         waitForEnter();
         return;
     }
@@ -1341,33 +1341,33 @@ void tryProgram(int dan) {
 
 }
 
-//ÇÁ·Î±×·¥ Á¤º¸Ã¢
+//í”„ë¡œê·¸ë¨ ì •ë³´ì°½
 void showInfo() {
     system("cls");
-    std::cout << "\t\t\t\t***** ÇÁ·Î±×·¥ Á¤º¸ *****\n";
-    std::cout << "\t\t\t\tµ¥ÀÌÅÍ º£ÀÌ½º ½Ã½ºÅÛ 1ºĞ¹İ 9Á¶\n";
-    std::cout << "\t\t\t\tÆÀ ÀÌ¸§: ÅÂ°æ´ÔÀÌ ÃàÁö¹ı ¾²½Å´Ù.\n";
-    std::cout << "\t\t\t\tÆÀ¿ø: ±èÅÂ°æ,¹Úº´¿í,¼­±â¿ø,ÀÌÈ£ÁØ,\n";
-    std::cout << "\t\t\t\tÁ¦ÀÛ ³¯Â¥: 2023-2ÇĞ±â µ¥ÀÌÅÍº£ÀÌ½º\n";
+    std::cout << "\t\t\t\t***** í”„ë¡œê·¸ë¨ ì •ë³´ *****\n";
+    std::cout << "\t\t\t\të°ì´í„° ë² ì´ìŠ¤ ì‹œìŠ¤í…œ 1ë¶„ë°˜ 9ì¡°\n";
+    std::cout << "\t\t\t\tíŒ€ ì´ë¦„: ì¶•ì§€ë²• ì“°ì‹ ë‹¤.\n";
+    std::cout << "\t\t\t\tíŒ€ì›: ë°•ë³‘ìš±, ***, ***, ***\n";
+    std::cout << "\t\t\t\tì œì‘ ë‚ ì§œ: 2023-2í•™ê¸° ë°ì´í„°ë² ì´ìŠ¤\n";
     std::cout << "\t\t\t\t***********************\n";
     waitForEnter();
 }
 
-//ÇÁ·Î±×·¥ Á¾·áÃ¢
+//í”„ë¡œê·¸ë¨ ì¢…ë£Œì°½
 void exitProgram() {
     system("cls");
-    std::cout << "ÇÁ·Î±×·¥À» Á¾·áÇÕ´Ï´Ù.\n";
+    std::cout << "í”„ë¡œê·¸ë¨ì„ ì¢…ë£Œí•©ë‹ˆë‹¤.\n";
     exit(0);
 }
 
 void waitForEnter() {
     std::cout << "Press Enter to continue...";
-    _getch(); // Enter Å° ÀÔ·Â ´ë±â
+    _getch(); // Enter í‚¤ ì…ë ¥ ëŒ€ê¸°
     showMainMenu();
 }
 
 void handleUserInput() {
-    char userInput = _getch(); // Å° ÀÔ·Â ¹Ş±â
+    char userInput = _getch(); // í‚¤ ì…ë ¥ ë°›ê¸°
     switch (userInput) {
     case '1':
         modeMenuScreen();
@@ -1394,35 +1394,35 @@ void showMainMenu() {
 
 
 void wordCount() {
-    cout << "Ä«¿îÆÃ³¡" << endl;
+    cout << "ì¹´ìš´íŒ…ë" << endl;
 
     printWordCounts();
     waitForEnter();
 }
 
 void printWordCounts() {
-    // ÆÄÀÏ ¿­±â
+    // íŒŒì¼ ì—´ê¸°
     int counting = 0;
 
     std::ifstream inputFile(path_result);
 
-    // ÆÄÀÏÀÌ ¼º°øÀûÀ¸·Î ¿­·È´ÂÁö È®ÀÎ
+    // íŒŒì¼ì´ ì„±ê³µì ìœ¼ë¡œ ì—´ë ¸ëŠ”ì§€ í™•ì¸
     if (!inputFile.is_open()) {
         std::cerr << "Error: Failed to open the file." << std::endl;
         return;
     }
     else {
-        std::cout << "\t\t\t\t***** °á°ú Ãâ·Â *****\n";
+        std::cout << "\t\t\t\t***** ê²°ê³¼ ì¶œë ¥ *****\n";
     }
 
-    // ÇÑ ÁÙ¾¿ ÀĞ¾î¼­ Ãâ·Â
+    // í•œ ì¤„ì”© ì½ì–´ì„œ ì¶œë ¥
     std::string line;
     while (std::getline(inputFile, line)) {
         std::cout << "\t\t\t" << line << std::endl;
         counting++;
     }
-    std::cout << "°íÀ¯Å° °³¼ö: " << counting << std::endl;
-    // ÆÄÀÏ ´İ±â
+    std::cout << "ê³ ìœ í‚¤ ê°œìˆ˜: " << counting << std::endl;
+    // íŒŒì¼ ë‹«ê¸°
     inputFile.close();
 }
 
